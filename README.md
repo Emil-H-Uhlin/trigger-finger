@@ -24,7 +24,9 @@ val player = GameObject.Builder("Player")
 ```
 </details>
 
-I transitioned into this game-object and component system as my previous solution was inconventient and difficult to work with (ei. having GameObject be an interface that implemented update()- and draw()-functions) when dealing with different collision behaviours. Colliding with a game object is much easier than colliding with some object.
+I transitioned into this game-object and component system as my previous solution was inconventient and difficult to work with (ei. having GameObject be an interface that implemented update()- and draw()-functions) when dealing with different collision behaviours. Colliding with a game object is much easier than colliding with some object. 
+
+This solution is also very <b>reusable</b>, which means I can use it for future game projects.
 
 ## Features
 ### <i>"Physics"</i>
@@ -57,5 +59,9 @@ https://user-images.githubusercontent.com/45757491/116869691-74dd1700-ac11-11eb-
 <i>Sprite</i> is another component that implements the <i>draw(...)</i> function of Component. It draws a bitmap and rotates it according to the belonging game objects rotation. 
 #### Animation
 There are many types of animations that can be implemented, with and without interpolation. In this game I use simple frame by frame animation of a sprite sheet. When instantiating an animation the user must define <i>how many frames</i> that are in the animation, <i>where the first frame is</i> (0, y), how many <i>rows</i> and <i>columns</i> in case the animation is too large to have on the same row. 
+
+This animation for instance has 8 frames, 8 columns, 1 row and the first frame is at (0, 0).
+![gun_player_shoot](https://user-images.githubusercontent.com/45757491/116876497-dbb3fd80-ac1c-11eb-80dd-dafdd7646fe6.png)
+
 #### Animator
 <i>Animator</i> is a component that uses an <i>animation</i> to update the bitmap of the Sprite-component that exists on the same game object.
