@@ -10,6 +10,6 @@ abstract class Component {
 	inline fun <reified type: Component> getComponent(): type? = gameObject.getComponent()
 	
 	open fun initialize(): Unit? = null
-	open fun update(deltaTime: Float): Any? = null
+	open fun update(deltaTime: Float): Unit? = null
 	open fun draw(canvas: Canvas, paint: Paint?): Unit? = null
 }
