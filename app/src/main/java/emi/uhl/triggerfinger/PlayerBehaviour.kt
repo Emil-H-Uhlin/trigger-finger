@@ -9,10 +9,14 @@ import kotlin.math.*
 
 class PlayerBehaviour(var maxAmmo: Int,
                       val shootAnimation: Animation,
-                      var remainingAmmo: Int = maxAmmo): Component() {
+                      var remainingAmmo: Int = maxAmmo,
+                      val reloadPenaltyTime: Float = .9f): Component() {
 	lateinit var body: PhysicsBody
 	lateinit var sprite: Sprite
 	lateinit var animator: Animator
+	
+	var timer: Float = .0f
+	val cooldown: Boolean get() = timer > .0f
 	
 	override fun initialize() {
 		body = getComponent()!!
@@ -21,7 +25,7 @@ class PlayerBehaviour(var maxAmmo: Int,
 	}
 	
 	fun shoot(quickShot: Boolean) {
-		if (remainingAmmo < 1) return
+		if (remainingAmmo < 1 || cooldown) return
 		
 		val dir = Vector2(cos(transform.rotation), sin(transform.rotation))
 		body.addForce(-dir * if (quickShot) 1500f else 950f)
@@ -35,9 +39,12 @@ class PlayerBehaviour(var maxAmmo: Int,
 	
 	fun reload() {
 		remainingAmmo = maxAmmo
+		timer = reloadPenaltyTime
 	}
 	
 	override fun update(deltaTime: Float) {
+		if (timer > 0) timer -= deltaTime
+		
 		sprite.flipY = transform.position.x < Game.screenWidth / 2f
 		
 		var bounce = false

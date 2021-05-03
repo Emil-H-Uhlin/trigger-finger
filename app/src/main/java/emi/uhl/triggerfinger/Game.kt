@@ -83,7 +83,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 			.withComponent(LavaBehaviour(225f, player.transform))
 			.build()
 		
-		lava.transform.position = Vector2(0f, resources.displayMetrics.heightPixels.toFloat() * 0.8f)
+		lava.transform.position = Vector2(0f, resources.displayMetrics.heightPixels.toFloat() * 0.2f)
 		
 		gameObjects = arrayListOf(player, lava)
 		
@@ -91,7 +91,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		TouchEventHandler.run {
 			touchStartEvent.add { _, _ ->
-				if (playerBehaviour.remainingAmmo > 0)
+				if (playerBehaviour.remainingAmmo > 0 && !playerBehaviour.cooldown)
 					timeScale = 0.4f
 			}
 			

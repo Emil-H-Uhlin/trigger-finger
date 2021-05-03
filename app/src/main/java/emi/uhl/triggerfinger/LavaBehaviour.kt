@@ -14,6 +14,11 @@ class LavaBehaviour(private val lavaMinSpeed: Float,
 		style = Paint.Style.FILL
 	}
 	
+	private val deepLavaPaint: Paint = Paint().apply {
+		color = Color.rgb((209f / 255f), (70f / 255f), 0f)
+		style = Paint.Style.FILL
+	}
+	
 	private val speed: Float get() {
 		val yDiff = transform.position.y - playerTransform.position.y
 		
@@ -43,5 +48,10 @@ class LavaBehaviour(private val lavaMinSpeed: Float,
 		}
 		
 		canvas.drawPath(path, lavaPaint)
+		
+		canvas.drawPath(path.apply { 
+			transform(Matrix().apply {
+				postTranslate(-Game.screenWidth.toFloat(), 125f)
+				postScale(-1f, 1f) })}, deepLavaPaint)
 	}
 }

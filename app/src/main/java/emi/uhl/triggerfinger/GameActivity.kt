@@ -6,6 +6,7 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.core.view.marginLeft
 
 class GameActivity : AppCompatActivity() {
     private lateinit var game: Game
@@ -21,10 +22,14 @@ class GameActivity : AppCompatActivity() {
                 gravity = if (this) Gravity.BOTTOM or Gravity.START
                 else Gravity.BOTTOM or Gravity.END
             }
+            
+            setPadding(150,0,0,75)
         }
     
         val reloadButton = Button(this).apply {
-            text = "Reload"
+            text = "reload"
+            width = 200
+            height = 200
         }
         
         reloadButton.setOnClickListener {

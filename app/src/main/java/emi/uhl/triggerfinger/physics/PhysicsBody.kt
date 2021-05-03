@@ -7,12 +7,12 @@ import emi.uhl.triggerfinger.math.Vector2
 class PhysicsBody(var velocity: Vector2 = Vector2.zero,
                   var angleVelocity: Float = .0f,
                   var useGravity: Boolean = true,
-                  var useDampening: Boolean = true,
+                  var useDamping: Boolean = true,
                   var mass: Float = 1.0f): Component() {
 	override fun update(deltaTime: Float) {
 		if (useGravity) velocity += Physics.GRAVITY * deltaTime
 		
-		if (useDampening) {
+		if (useDamping) {
 			velocity += -velocity * Physics.DAMPING * Game.timeScale
 			angleVelocity -= angleVelocity * Physics.DAMPING * Game.timeScale
 		}
