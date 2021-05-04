@@ -1,7 +1,7 @@
 package emi.uhl.triggerfinger.physics
 
 import emi.uhl.triggerfinger.Component
-import emi.uhl.triggerfinger.Game
+import emi.uhl.triggerfinger.game.Game
 import emi.uhl.triggerfinger.math.Vector2
 
 class PhysicsBody(var velocity: Vector2 = Vector2.zero,

@@ -6,7 +6,7 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import androidx.core.view.marginLeft
+import emi.uhl.triggerfinger.game.Game
 
 class GameActivity : AppCompatActivity() {
     private lateinit var game: Game

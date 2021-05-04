@@ -1,13 +1,11 @@
-package emi.uhl.triggerfinger
+package emi.uhl.triggerfinger.game
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.view.MotionEvent
 import android.view.SurfaceView
+import emi.uhl.triggerfinger.*
 import emi.uhl.triggerfinger.graphics.Animation
 import emi.uhl.triggerfinger.graphics.Animator
 import emi.uhl.triggerfinger.graphics.Sprite
@@ -19,21 +17,16 @@ import kotlin.math.roundToInt
 
 class Game(context: Context): SurfaceView(context), Runnable {
 	@Volatile var playing = false
-	var paused = true
-		set(value) {
-			if (field != value && !value) {
-				prevFrameTime = System.currentTimeMillis()
-			}
-			
-			field = value
-		}
 	
 	private lateinit var gameThread: Thread
+	
+	private var gameState: GameState = GameState.PAUSED
 	
 	private val player: GameObject
 	private val playerBehaviour: PlayerBehaviour
 	
 	private val lava: GameObject
+	private val lavaBehaviour: LavaBehaviour
 	
 	private var worldPosition: Vector2
 	
@@ -54,12 +47,19 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		var screenWidth = -1
 		
 		var timeScale: Float = 1.0f; private set
+		
+		private const val pixelsInUnit: Int = 250
+		
+		fun toUnits(value: Float) : Float {
+			return value / pixelsInUnit
+		}
 	}
 	
 	init {
 		val opts = BitmapFactory.Options().apply { inScaled = false }
 		
-		val playerSpriteSheet = BitmapFactory.decodeResource(resources, R.drawable.gun_player_shoot, opts)
+		val playerSpriteSheet = BitmapFactory.decodeResource(resources,
+			R.drawable.gun_player_shoot, opts)
 		val gunSprite: Bitmap = Bitmap.createBitmap(playerSpriteSheet, 0, 0, 64, 48)
 		
 		val shootAnimation = Animation(playerSpriteSheet, 8, 64, 48)
@@ -81,9 +81,11 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		lava = GameObject.Builder("Lava")
 			.withComponent(LavaBehaviour(225f, player.transform))
-			.build()
+			.build().apply {
+				transform.position = Vector2(0f, resources.displayMetrics.heightPixels.toFloat() * .2f)
+			}
 		
-		lava.transform.position = Vector2(0f, resources.displayMetrics.heightPixels.toFloat() * 0.2f)
+		lavaBehaviour = lava.getComponent()!!
 		
 		gameObjects = arrayListOf(player, lava)
 		
@@ -107,24 +109,29 @@ class Game(context: Context): SurfaceView(context), Runnable {
 	override fun run() {
 		while (playing) {
 			draw()
-			
-			if (paused) continue
-			
 			update()
 		}
 	}
 	
 	private fun update() {
 		val frameDelta = scaledDeltaTime
-		
-		gameObjects.forEach { it.update(frameDelta) }
-		gameObjects.filter { it.destroyed }.forEach { gameObjects.remove(it) }
-		
-		if (player.transform.position.y > lava.transform.position.y) {
+		println(frameDelta)
+		when (gameState) {
+			GameState.PAUSED -> lavaBehaviour.updateOffset(frameDelta)
 			
+			GameState.GAME_OVER -> lava.update(frameDelta)
+			
+			GameState.PLAYING -> {
+				gameObjects.forEach { it.update(frameDelta) }
+				gameObjects.filter { it.destroyed }.forEach { gameObjects.remove(it) }
+				
+				if (player.transform.position.y > lava.transform.position.y) {
+					gameState = GameState.GAME_OVER
+				}
+				
+				if (TouchEventHandler.isTouching) TouchEventHandler.onTouchHold()
+			}
 		}
-		
-		if (TouchEventHandler.isTouching) TouchEventHandler.onTouchHold()
 		
 		prevFrameTime = System.currentTimeMillis()
 	}
@@ -155,17 +162,30 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		canvas.restore()
 		
-		val heightText = "Height: ${ -player.transform.position.y.roundToInt() }"
-		canvas.drawText(heightText, (screenWidth / 2 - uiTextPaint.measureText(heightText) / 2), 50f, uiTextPaint)
-		
-		val ammoText = "${ playerBehaviour.remainingAmmo } / ${ playerBehaviour.maxAmmo }"
-		canvas.drawText(ammoText, screenWidth - uiTextPaint.measureText(ammoText), 50f, uiTextPaint)
+		drawUI(canvas)
 		
 		holder.unlockCanvasAndPost(canvas)
 	}
 	
+	private fun drawUI(canvas: Canvas) {
+		when (gameState) {
+			GameState.GAME_OVER -> {
+			
+			}
+			
+			else -> {
+				val heightText = "Height: ${ -(toUnits(player.transform.position.y)).roundToInt() }"
+				canvas.drawText(heightText, (screenWidth / 2 - uiTextPaint.measureText(heightText) / 2), 50f, uiTextPaint)
+				
+				val ammoText = "${ playerBehaviour.remainingAmmo } / ${ playerBehaviour.maxAmmo }"
+				canvas.drawText(ammoText, screenWidth - uiTextPaint.measureText(ammoText), 50f, uiTextPaint)
+			}
+		}
+	}
+	
 	fun resume() {
 		playing = true
+		prevFrameTime = System.currentTimeMillis()
 		
 		gameThread = Thread(this)
 		gameThread.start()
@@ -188,7 +208,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 			
 			when (action) {
 				MotionEvent.ACTION_DOWN -> {
-					paused = false
+					if (gameState == GameState.PAUSED) gameState = GameState.PLAYING
 					
 					TouchEventHandler.onTouchStart(
 						screenPoint.x,

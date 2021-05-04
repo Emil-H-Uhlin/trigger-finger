@@ -1,5 +1,6 @@
 package emi.uhl.triggerfinger
 
+import emi.uhl.triggerfinger.game.Game
 import emi.uhl.triggerfinger.graphics.Animation
 import emi.uhl.triggerfinger.graphics.Animator
 import emi.uhl.triggerfinger.graphics.Sprite

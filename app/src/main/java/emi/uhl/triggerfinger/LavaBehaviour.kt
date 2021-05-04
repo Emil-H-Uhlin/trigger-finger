@@ -1,7 +1,7 @@
 package emi.uhl.triggerfinger
 
 import android.graphics.*
-import emi.uhl.triggerfinger.math.MathHelper
+import emi.uhl.triggerfinger.game.Game
 import emi.uhl.triggerfinger.math.Vector2
 import kotlin.math.sin
 
@@ -22,13 +22,20 @@ class LavaBehaviour(private val lavaMinSpeed: Float,
 	private val speed: Float get() {
 		val yDiff = transform.position.y - playerTransform.position.y
 		
-		return (lavaMinSpeed * yDiff / 500f).coerceAtLeast(lavaMinSpeed)
+		if (yDiff < 0)
+			return lavaMinSpeed * 3f
+		
+		return (lavaMinSpeed * Game.toUnits(yDiff)).coerceAtLeast(lavaMinSpeed)
 	}
 	
 	private var xOffset = 0f
 	
 	override fun update(deltaTime: Float) {
 		transform.position += Vector2.up * speed * deltaTime
+		updateOffset(deltaTime)
+	}
+	
+	fun updateOffset(deltaTime: Float) {
 		xOffset += waveSpeed * deltaTime
 	}
 	
