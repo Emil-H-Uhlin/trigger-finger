@@ -93,8 +93,9 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		TouchEventHandler.run {
 			touchStartEvent.add { _, _ ->
-				if (playerBehaviour.remainingAmmo > 0 && !playerBehaviour.cooldown)
-					timeScale = 0.4f
+				if (gameState == GameState.PLAYING)
+					if (playerBehaviour.remainingAmmo > 0 && !playerBehaviour.cooldown)
+						timeScale = 0.4f
 			}
 			
 			touchEndEvent.add { _, _ ->
