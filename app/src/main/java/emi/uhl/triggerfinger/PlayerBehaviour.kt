@@ -9,9 +9,9 @@ import emi.uhl.triggerfinger.physics.PhysicsBody
 import kotlin.math.*
 
 class PlayerBehaviour(var maxAmmo: Int,
-                      val shootAnimation: Animation,
+                      private val shootAnimation: Animation,
                       var remainingAmmo: Int = maxAmmo,
-                      val reloadPenaltyTime: Float = .9f): Component() {
+                      private val reloadPenaltyTime: Float = .6f): Component() {
 	lateinit var body: PhysicsBody
 	lateinit var sprite: Sprite
 	lateinit var animator: Animator

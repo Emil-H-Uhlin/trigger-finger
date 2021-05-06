@@ -23,7 +23,7 @@ class GameActivity : AppCompatActivity() {
                 else Gravity.BOTTOM or Gravity.END
             }
             
-            setPadding(150,0,0,75)
+            setPadding(150,0,150,75)
         }
     
         val reloadButton = Button(this).apply {

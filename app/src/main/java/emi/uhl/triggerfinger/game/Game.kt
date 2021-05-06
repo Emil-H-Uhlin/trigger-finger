@@ -42,6 +42,11 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		textSize = 48f
 	}
 	
+	private val gameOverPaint: Paint = Paint().apply {
+		color = Color.BLACK
+		textSize = 128f
+	}
+	
 	companion object {
 		var screenHeight = -1
 		var screenWidth = -1
@@ -50,7 +55,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		private const val pixelsInUnit: Int = 250
 		
-		fun toUnits(value: Float) : Float {
+		fun toUnits(value: Float): Float {
 			return value / pixelsInUnit
 		}
 	}
@@ -116,7 +121,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 	
 	private fun update() {
 		val frameDelta = scaledDeltaTime
-		println(frameDelta)
+		
 		when (gameState) {
 			GameState.PAUSED -> lavaBehaviour.updateOffset(frameDelta)
 			
@@ -171,7 +176,11 @@ class Game(context: Context): SurfaceView(context), Runnable {
 	private fun drawUI(canvas: Canvas) {
 		when (gameState) {
 			GameState.GAME_OVER -> {
-			
+				val gameOverText = "GAME OVER"
+				canvas.drawText(gameOverText,
+					(screenWidth / 2 - gameOverPaint.measureText(gameOverText) / 2),
+					(lava.transform.position.y + worldPosition.y + screenHeight / 2f).coerceIn(
+						(screenHeight / 2f)..(screenHeight + 300f)), gameOverPaint)
 			}
 			
 			else -> {
