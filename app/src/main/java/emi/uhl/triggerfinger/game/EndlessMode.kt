@@ -69,8 +69,6 @@ class EndlessMode(context: Context): GameMode(context) {
 		
 		gameObjects = arrayListOf(player, lava)
 		
-		gameObjects.forEach { println(it.toString()) }
-		
 		TouchEventHandler.run {
 			touchStartEvent.add { _, _ ->
 				if (gameState == GameState.PLAYING)
@@ -97,8 +95,12 @@ class EndlessMode(context: Context): GameMode(context) {
 				gameObjects.forEach { it.update(deltaTime) }
 				gameObjects.filter { it.destroyed }.forEach { gameObjects.remove(it) }
 				
+				val playerDisplayPosition = player.transform.position - -worldPosition
+				
 				if (player.transform.position.y > lava.transform.position.y) {
 					gameState = GameState.GAME_OVER
+				} else if (playerDisplayPosition.y < Game.screenHeight * 1f / 2.5f) {
+					worldPosition.y -= playerDisplayPosition.y - Game.screenHeight * 1f / 2.5f
 				}
 				
 				if (TouchEventHandler.isTouching) TouchEventHandler.onTouchHold()
@@ -113,12 +115,6 @@ class EndlessMode(context: Context): GameMode(context) {
 		
 		val canvas = holder.lockCanvas()
 		canvas.drawColor(Color.BLACK)
-		
-		val playerDisplayPosition = player.transform.position - -worldPosition
-		
-		if (playerDisplayPosition.y < Game.screenHeight * 1f / 2.5f) {
-			worldPosition.y -= playerDisplayPosition.y - Game.screenHeight * 1f / 2.5f
-		}
 		
 		canvas.save()
 		canvas.translate(worldPosition.x, worldPosition.y)
