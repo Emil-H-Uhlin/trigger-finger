@@ -19,7 +19,7 @@ val player = GameObject.Builder("Player")
   .withComponent(Animator())
   .withComponent(PhysicsBody())
   .withComponent(CollisionShape())
-  .WithComponent(PlayerBehagviour(maxAmmo, shootAnimation))
+  .WithComponent(PlayerBehaviour(maxAmmo, shootAnimation))
   .build()
 ```
 </details>
