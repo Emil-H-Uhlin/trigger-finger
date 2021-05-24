@@ -1,3 +1,16 @@
+## Contents 
+- [Game Objects](#game-object-framework)
+- [Features](#features)
+  * ["Physics"](#physics)
+    + [PhysicsBody](#physicsbody)
+    + [Collision](#collision)
+  * [Lava](#lava)
+  * [Sprite animation](#sprite-animation)
+    + [Sprite](#sprite)
+    + [Animation](#animation)
+    + [Animator](#animator)
+<hr>
+
 # Trigger finger
 <b>Trigger finger</b> is a game that is meant to be played on the go with one hand. The player controls a gun, and by tapping the screen the gun fires a bullet which applies force to the gun in the opposite direction (along with some rotation). In order to progress the player must time their shots as to not shoot themselves upwards. Also there is lava.
 
@@ -19,7 +32,7 @@ val player = GameObject.Builder("Player")
   .withComponent(Animator())
   .withComponent(PhysicsBody())
   .withComponent(CollisionShape())
-  .WithComponent(PlayerBehagviour(maxAmmo, shootAnimation))
+  .WithComponent(PlayerBehaviour(maxAmmo, shootAnimation))
   .build()
 ```
 </details>
