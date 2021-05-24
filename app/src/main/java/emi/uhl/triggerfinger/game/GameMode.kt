@@ -1,12 +1,16 @@
 package emi.uhl.triggerfinger.game
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Paint
 import android.view.SurfaceView
-import emi.uhl.triggerfinger.GameObject
+import emi.uhl.triggerfinger.gameObjects.GameObject
 
 abstract class GameMode(context: Context): SurfaceView(context), Runnable {
 	@Volatile private var running = false
 	private lateinit var gameThread: Thread
+	
+	protected var score: Int = 0
 	
 	var prevFrameTime: Long = -1
 	
@@ -15,19 +19,21 @@ abstract class GameMode(context: Context): SurfaceView(context), Runnable {
 	
 	protected var gameState: GameState = GameState.PAUSED
 	
+	val uiTextPaint: Paint = Paint().apply {
+		color = Color.WHITE
+		textSize = 48f
+	}
+	
+	val gameOverPaint: Paint = Paint().apply {
+		color = Color.BLACK
+		textSize = 128f
+	}
+	
 	abstract val gameObjects: ArrayList<GameObject>
 	
 	init {
 		Game.screenWidth = resources.displayMetrics.widthPixels
 		Game.screenHeight = resources.displayMetrics.heightPixels
-	}
-	
-	companion object {
-		private const val pixelsInUnit: Int = 250
-		
-		fun toUnits(value: Float): Float {
-			return value / pixelsInUnit
-		}
 	}
 	
 	final override fun run() {
@@ -42,6 +48,10 @@ abstract class GameMode(context: Context): SurfaceView(context), Runnable {
 	}
 	
 	abstract fun draw()
+	
+	fun addGameObject(gameObject: GameObject) {
+		gameObjects.add(gameObject)
+	}
 	
 	fun resume() {
 		running = true

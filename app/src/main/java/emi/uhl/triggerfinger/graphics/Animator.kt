@@ -1,7 +1,6 @@
 package emi.uhl.triggerfinger.graphics
 
-import androidx.core.util.Predicate
-import emi.uhl.triggerfinger.Component
+import emi.uhl.triggerfinger.gameObjects.Component
 
 class Animator: Component() {
 	companion object {

@@ -1,6 +1,6 @@
 package emi.uhl.triggerfinger.physics
 
-import emi.uhl.triggerfinger.Component
+import emi.uhl.triggerfinger.gameObjects.Component
 import emi.uhl.triggerfinger.game.Game
 import emi.uhl.triggerfinger.math.Vector2
 
@@ -8,7 +8,10 @@ class PhysicsBody(var velocity: Vector2 = Vector2.zero,
                   var angleVelocity: Float = .0f,
                   var useGravity: Boolean = true,
                   var useDamping: Boolean = true,
-                  var mass: Float = 1.0f): Component() {
+                  var mass: Float = 1.0f,
+                  var freezeX: Boolean = false,
+                  var freezeY: Boolean = false): Component() {
+	
 	override fun update(deltaTime: Float) {
 		if (useGravity) velocity += Physics.GRAVITY * deltaTime
 		
@@ -17,7 +20,9 @@ class PhysicsBody(var velocity: Vector2 = Vector2.zero,
 			angleVelocity -= angleVelocity * Physics.DAMPING * Game.timeScale
 		}
 		
-		transform.position += velocity * deltaTime
+		val vel = Vector2(if (freezeX) 0f else velocity.x, if (freezeY) 0f else velocity.y)
+		
+		transform.position += vel * deltaTime
 		transform.rotation += angleVelocity * deltaTime
 	}
 	

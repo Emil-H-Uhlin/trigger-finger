@@ -5,13 +5,18 @@ import android.content.Context
 import android.graphics.*
 import android.view.MotionEvent
 import emi.uhl.triggerfinger.*
+import emi.uhl.triggerfinger.gameObjects.GameObject
+import emi.uhl.triggerfinger.gameObjects.LavaBehaviour
+import emi.uhl.triggerfinger.gameObjects.PlayerBehaviour
 import emi.uhl.triggerfinger.graphics.Animation
 import emi.uhl.triggerfinger.graphics.Animator
+import emi.uhl.triggerfinger.graphics.DrawingLayer
 import emi.uhl.triggerfinger.graphics.Sprite
 import emi.uhl.triggerfinger.math.Vector2
 import emi.uhl.triggerfinger.physics.CollisionShape
 import emi.uhl.triggerfinger.physics.Physics
 import emi.uhl.triggerfinger.physics.PhysicsBody
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 class EndlessMode(context: Context): GameMode(context) {
@@ -25,15 +30,8 @@ class EndlessMode(context: Context): GameMode(context) {
 	
 	private var worldPosition: Vector2
 	
-	private val uiTextPaint: Paint = Paint().apply {
-		color = Color.WHITE
-		textSize = 48f
-	}
-	
-	private val gameOverPaint: Paint = Paint().apply {
-		color = Color.BLACK
-		textSize = 128f
-	}
+	private var maxHeight: Int = 0
+	private var gainedScore: Int = 0
 	
 	init {
 		val opts = BitmapFactory.Options().apply { inScaled = false }
@@ -50,14 +48,12 @@ class EndlessMode(context: Context): GameMode(context) {
 			.withComponent(CollisionShape.CollisionCircle(30f, Physics.ENEMY, Physics.PLAYER))
 			.withComponent(PhysicsBody())
 			.withComponent(PlayerBehaviour(30, shootAnimation))
+			.withTransform(
+				position = Vector2(resources.displayMetrics.widthPixels / 2f, 0f),
+				rotation = (Math.PI * 2f * 1f / 4f).toFloat())
 			.build()
 		
 		playerBehaviour = player.getComponent()!!
-		
-		player.transform.apply {
-			position = Vector2(resources.displayMetrics.widthPixels / 2f, 0f)
-			rotation = (Math.PI * 2f * 1f/4f).toFloat()
-		}
 		
 		lava = GameObject.Builder("Lava")
 			.withComponent(LavaBehaviour(225f, player.transform))
@@ -92,8 +88,33 @@ class EndlessMode(context: Context): GameMode(context) {
 			GameState.GAME_OVER -> lava.update(deltaTime)
 			
 			GameState.PLAYING -> {
-				gameObjects.forEach { it.update(deltaTime) }
-				gameObjects.filter { it.destroyed }.forEach { gameObjects.remove(it) }
+				for (i in 0 until gameObjects.count()) {
+					gameObjects[i].update(deltaTime)
+				}
+				
+				for (i in 0 until gameObjects.count() - 1) {
+					val collider = gameObjects[i].getComponent<CollisionShape>() ?: continue
+					
+					for (j in i until gameObjects.count()) {
+						val other = gameObjects[j].getComponent<CollisionShape>() ?: continue
+						
+						if (collider.collidesWith(other)) {
+							collider.onCollision(other.gameObject)
+						}
+						
+						if (other.collidesWith(collider)) {
+							other.onCollision(other.gameObject)
+						}
+					}
+				}
+				
+				for (i in gameObjects.count() - 1 downTo 0) {
+					val gameObject = gameObjects[i]
+					
+					if (gameObject.destroyed) {
+						gameObjects.remove(gameObject)
+					}
+				}
 				
 				val playerDisplayPosition = player.transform.position - -worldPosition
 				
@@ -104,6 +125,11 @@ class EndlessMode(context: Context): GameMode(context) {
 				}
 				
 				if (TouchEventHandler.isTouching) TouchEventHandler.onTouchHold()
+				
+				val heightUnits = -Game.toUnits(player.transform.position.y).roundToInt()
+				maxHeight = maxHeight.coerceAtLeast(heightUnits)
+				
+				score = maxHeight + gainedScore
 			}
 		}
 		
@@ -148,8 +174,10 @@ class EndlessMode(context: Context): GameMode(context) {
 				canvas.drawText(ammoText, Game.screenWidth - uiTextPaint.measureText(ammoText), 50f, uiTextPaint)
 			}
 		}
+		
+		val scoreText = "Score: $score";
+		canvas.drawText(scoreText, 0f, 50f, uiTextPaint)
 	}
-	
 	
 	fun performReload() = playerBehaviour.reload()
 	
@@ -157,7 +185,6 @@ class EndlessMode(context: Context): GameMode(context) {
 	override fun onTouchEvent(event: MotionEvent?): Boolean {
 		event?.run {
 			val screenPoint = Vector2(event.x, event.y) - worldPosition
-			val worldPoint = Vector2(event.x, event.y)
 			
 			when (action) {
 				MotionEvent.ACTION_DOWN -> {

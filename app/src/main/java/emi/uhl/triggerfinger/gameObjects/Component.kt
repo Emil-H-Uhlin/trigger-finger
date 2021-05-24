@@ -1,4 +1,4 @@
-package emi.uhl.triggerfinger
+package emi.uhl.triggerfinger.gameObjects
 
 import android.graphics.Canvas
 import android.graphics.Paint

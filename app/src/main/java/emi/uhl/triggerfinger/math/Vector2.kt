@@ -39,6 +39,10 @@ data class Vector2(var x: Float, var y: Float) {
         }
     }
 
+    constructor(x: Int, y: Int): this(x.toFloat(), y.toFloat())
+    constructor(x: Float, y: Int): this(x, y.toFloat())
+    constructor(x: Int, y: Float): this(x.toFloat(), y)
+    
     operator fun plusAssign(other: Vector2) { x += other.x; y += other.y }  // add vector
     operator fun minusAssign(other: Vector2) { x -= other.x; y -= other.y } // subtract vector
 
