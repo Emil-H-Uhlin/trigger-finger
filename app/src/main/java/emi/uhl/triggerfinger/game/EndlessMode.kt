@@ -49,7 +49,11 @@ class EndlessMode(context: Context): GameMode(context) {
 		player = GameObject.Builder("Player") // build player object
 			.withComponent(playerSprite)
 			.withComponent(Animator())
-			.withComponent(CollisionShape.CollisionCircle(max(playerSprite.size.x, playerSprite.size.y) / 2f - 50, Physics.ENEMY, Physics.PLAYER).apply {
+			.withComponent(
+				CollisionShape.CollisionCircle(
+					max(playerSprite.size.x, playerSprite.size.y) / 2f - 50,
+					Physics.ENEMY,
+					Physics.PLAYER).apply {
 				onCollision.add {
 					gameState = GameState.GAME_OVER
 				}

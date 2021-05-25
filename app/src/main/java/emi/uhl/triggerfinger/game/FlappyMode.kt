@@ -22,7 +22,6 @@ import emi.uhl.triggerfinger.physics.CollisionShape
 import emi.uhl.triggerfinger.physics.Physics
 import emi.uhl.triggerfinger.physics.PhysicsBody
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 /**
  * @author Emil Uhlin, EMUH0001
