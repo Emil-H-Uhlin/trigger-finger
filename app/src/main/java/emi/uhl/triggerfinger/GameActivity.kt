@@ -25,7 +25,13 @@ class GameActivity : AppCompatActivity() {
 		}
 		
 		val frame = FrameLayout(this)
-		game = EndlessMode(this)
+		
+		intent.extras?.run {
+			if (getString("game_mode") == "flappy")
+				game = FlappyMode(this@GameActivity)
+			else
+				game = EndlessMode(this@GameActivity)
+		}
 		
 		when (game) {
 			is FlappyMode -> {
