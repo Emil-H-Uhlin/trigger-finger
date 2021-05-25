@@ -14,6 +14,9 @@ import emi.uhl.triggerfinger.physics.CollisionShape
 import emi.uhl.triggerfinger.physics.PhysicsBody
 import kotlin.math.*
 
+/**
+ * @author Emil Uhlin, EMUH0001
+ */
 class PlayerBehaviour(var maxAmmo: Int,
                       private val shootForce: Float = 900f,
                       private val quickshotModifier: Float = 1.8f,
@@ -34,8 +37,12 @@ class PlayerBehaviour(var maxAmmo: Int,
 		animator = getComponent()!!
 	}
 	
-	fun shoot(quickShot: Boolean) {
-		if (remainingAmmo < 1 || cooldown) return
+	/**
+	 * Shoot gun
+	 * Adds force in opposite direction to gun
+	 */
+	fun shoot(quickShot: Boolean): Boolean {
+		if (remainingAmmo < 1 || cooldown) return false
 		
 		val dir = Vector2(cos(transform.rotation), sin(transform.rotation))
 		body.addForce(-dir * shootForce * if (quickShot) quickshotModifier else 1.0f)
@@ -45,8 +52,13 @@ class PlayerBehaviour(var maxAmmo: Int,
 		remainingAmmo--
 		
 		animator.animation = shootAnimation
+		
+		return true
 	}
 	
+	/**
+	 * reload gun, resets ammo and sets shooting cooldown
+	 */
 	fun reload() {
 		remainingAmmo = maxAmmo
 		timer = reloadPenaltyTime
@@ -55,6 +67,7 @@ class PlayerBehaviour(var maxAmmo: Int,
 	override fun update(deltaTime: Float) {
 		if (timer > 0) timer -= deltaTime
 		
+		// flip sprite according to which side of the screen the object is located
 		sprite.flipY = transform.position.x < Game.screenWidth / 2f
 		
 		var bounce = false
@@ -68,6 +81,7 @@ class PlayerBehaviour(var maxAmmo: Int,
 			bounce = true
 		}
 		
+		// bounce off walls if walls are hit
 		if (bounce) {
 			body.velocity.y *= 0.7f
 			body.velocity.x *= -0.5f

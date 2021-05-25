@@ -4,6 +4,10 @@ import emi.uhl.triggerfinger.gameObjects.Component
 import emi.uhl.triggerfinger.game.Game
 import emi.uhl.triggerfinger.math.Vector2
 
+/**
+ * @author Emil Uhlin
+ * A component that allows for gravity and force manipulations of game object transforms
+ */
 class PhysicsBody(var velocity: Vector2 = Vector2.zero,
                   var angleVelocity: Float = .0f,
                   var useGravity: Boolean = true,

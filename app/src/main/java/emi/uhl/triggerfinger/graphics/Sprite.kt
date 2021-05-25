@@ -6,7 +6,11 @@ import android.graphics.Paint
 import emi.uhl.triggerfinger.gameObjects.Component
 import emi.uhl.triggerfinger.math.Vector2
 
-open class Sprite(var bitmap: Bitmap,
+/**
+ * @author Emil Uhlin, EMUH0001
+ * Component that draws a bitmap
+ */
+class Sprite(var bitmap: Bitmap,
                   var scale: Float = 1.0f,
                   var flipX: Boolean = false,
                   var flipY: Boolean = false): Component() {
@@ -16,6 +20,10 @@ open class Sprite(var bitmap: Bitmap,
     
     val size: Vector2 get() = Vector2(bitmap.width, bitmap.height) * scale
     
+    /**
+     * Draw bitmap
+     * Scales bitmap if needed (if X or Y is flipped - or both)
+     */
     override fun draw(canvas: Canvas, paint: Paint?) {
         val xScale: Float = (if (flipX) -1f else 1f) * scale
         val yScale: Float = (if (flipY) -1f else 1f) * scale

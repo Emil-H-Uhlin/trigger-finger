@@ -10,15 +10,16 @@ import emi.uhl.triggerfinger.math.Vector2
 
 typealias CollisionEvent = (GameObject) -> Unit
 
+/**
+ * @author Emil Uhlin, EMUH0001
+ * Collider-objects used for simple intersect-logic
+ */
 sealed class CollisionShape(val layerMask: Int,
                             val isLayer: Int = 0): Component() {
 	val onCollision: ArrayList<CollisionEvent> = arrayListOf()
 	
-	fun onCollision(gameObject: GameObject) {
-		onCollision.forEach {
-			it.invoke(gameObject)
-		}
-	}
+	// invoke any and all collision events
+	fun onCollision(gameObject: GameObject) = onCollision.forEach { it.invoke(gameObject) }
 	
 	abstract fun collidesWith(circle: CollisionCircle): Boolean
 	abstract fun collidesWith(rectangle: CollisionRectangle): Boolean

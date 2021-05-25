@@ -19,6 +19,9 @@ import emi.uhl.triggerfinger.physics.PhysicsBody
 import kotlin.math.max
 import kotlin.math.roundToInt
 
+/**
+ * @author Emil Uhlin, EMUH0001
+ */
 class EndlessMode(context: Context): GameMode(context) {
 	override val gameObjects: ArrayList<GameObject>
 	
@@ -34,18 +37,16 @@ class EndlessMode(context: Context): GameMode(context) {
 	private var gainedScore: Int = 0
 	
 	init {
-		val opts = BitmapFactory.Options().apply { inScaled = false }
+		val opts = BitmapFactory.Options().apply { inScaled = false } // unscaled sprites preferred
 		
 		val playerSpriteSheet = BitmapFactory.decodeResource(resources,
 			R.drawable.gun_player_shoot, opts)
 		
 		val gunSprite: Bitmap = Bitmap.createBitmap(playerSpriteSheet, 0, 0, 64, 48)
-		
 		val shootAnimation = Animation(playerSpriteSheet, 8, 64, 48)
-		
 		val playerSprite = Sprite(gunSprite, scale = 4.5f).apply { flipY = true }
 		
-		player = GameObject.Builder("Player")
+		player = GameObject.Builder("Player") // build player object
 			.withComponent(playerSprite)
 			.withComponent(Animator())
 			.withComponent(CollisionShape.CollisionCircle(max(playerSprite.size.x, playerSprite.size.y) / 2f - 50, Physics.ENEMY, Physics.PLAYER).apply {
@@ -63,19 +64,20 @@ class EndlessMode(context: Context): GameMode(context) {
 				rotation = (Math.PI * 2 *  -3f/4f).toFloat())
 			.build()
 		
-		playerBehaviour = player.getComponent()!!
+		playerBehaviour = player.getComponent()!! // store player behaviour for easy access
 		
-		lava = GameObject.Builder("Lava")
+		lava = GameObject.Builder("Lava") // build lava object
 			.withComponent(LavaBehaviour(225f, player.transform))
-			.build().apply {
-				transform.position = Vector2(0f, resources.displayMetrics.heightPixels.toFloat() * .2f)
-			}
+			.withTransform(
+				position = Vector2(0f, resources.displayMetrics.heightPixels.toFloat() * .2f)
+			)
+			.build()
 		
-		lavaBehaviour = lava.getComponent()!!
+		lavaBehaviour = lava.getComponent()!! // store lava behaviour for easy access
 		
-		gameObjects = arrayListOf(player, lava)
+		gameObjects = arrayListOf(player, lava) // initialize list of game objects
 		
-		val shotEffect = soundPool.load(context, R.raw.shoot_effect, 1)
+		val shotEffect = soundPool.load(context, R.raw.shoot_effect, 1) // load shoot sound effect
 		
 		TouchEventHandler.run {
 			touchStartEvent.add { _, _ ->
@@ -85,8 +87,9 @@ class EndlessMode(context: Context): GameMode(context) {
 			}
 			
 			touchEndEvent.add { _, _ ->
-				playerBehaviour.shoot(durationOfTouch < 0.2f && !wasDrag)
-				soundPool.play(shotEffect, 1.0f, 1.0f, 1, 0, 1.0f)
+				if (playerBehaviour.shoot(durationOfTouch < 0.2f && !wasDrag))
+					soundPool.play(shotEffect, 1.0f, 1.0f, 1, 0, 1.0f)  // play sound effect when shoot
+				
 				Game.timeScale = 1.0f
 			}
 		}
@@ -96,20 +99,22 @@ class EndlessMode(context: Context): GameMode(context) {
 	
 	override fun update(deltaTime: Float) {
 		when (gameState) {
-			GameState.PAUSED -> lavaBehaviour.updateOffset(deltaTime)
+			GameState.PAUSED -> lavaBehaviour.updateOffset(deltaTime) // render lava movement even when paused
 			
-			GameState.GAME_OVER -> lava.update(deltaTime)
+			GameState.GAME_OVER -> lava.update(deltaTime) // update lava when game over
 			
 			GameState.PLAYING -> {
+				// safely update all game objects that were present at the start of the scene
 				for (i in 0 until gameObjects.count()) {
 					gameObjects[i].update(deltaTime)
 				}
 				
+				// check collision between each pair of game objects
 				for (i in 0 until gameObjects.count() - 1) {
-					val collider = gameObjects[i].getComponent<CollisionShape>() ?: continue
+					val collider = gameObjects[i].getComponent<CollisionShape>() ?: continue // get collider or continue if null
 					
 					for (j in i until gameObjects.count()) {
-						val other = gameObjects[j].getComponent<CollisionShape>() ?: continue
+						val other = gameObjects[j].getComponent<CollisionShape>() ?: continue // get collider or continue if null
 						
 						if (collider.collidesWith(other)) {
 							collider.onCollision(other.gameObject)
@@ -121,6 +126,7 @@ class EndlessMode(context: Context): GameMode(context) {
 					}
 				}
 				
+				// safely remove destroyed game objects
 				for (i in gameObjects.count() - 1 downTo 0) {
 					val gameObject = gameObjects[i]
 					
@@ -129,11 +135,11 @@ class EndlessMode(context: Context): GameMode(context) {
 					}
 				}
 				
-				val playerDisplayPosition = player.transform.position - -worldPosition
+				val playerDisplayPosition = player.transform.position - -worldPosition // player position on screen
 				
-				if (player.transform.position.y > lava.transform.position.y) {
+				if (player.transform.position.y > lava.transform.position.y) { // game over if gun falls into lava
 					gameState = GameState.GAME_OVER
-				} else if (playerDisplayPosition.y < Game.screenHeight * 1f / 2.5f) {
+				} else if (playerDisplayPosition.y < Game.screenHeight * 1f / 2.5f) { // move world upward with player
 					worldPosition.y -= playerDisplayPosition.y - Game.screenHeight * 1f / 2.5f
 				}
 				
@@ -158,19 +164,23 @@ class EndlessMode(context: Context): GameMode(context) {
 		canvas.save()
 		canvas.translate(worldPosition.x, worldPosition.y)
 		
+		// draw all game objects in order of their drawing layers
 		for (layer in DrawingLayer.values()) {
 			for (i in 0 until gameObjects.count()) {
 				gameObjects[i].draw(canvas, null, layer)
 			}
 		}
 		
-		canvas.restore()
+		canvas.restore() // restore position of canvas for UI
 		
-		drawUI(canvas)
+		drawUI(canvas) // draw UI
 		
-		holder.unlockCanvasAndPost(canvas)
+		holder.unlockCanvasAndPost(canvas) // render frame
 	}
 	
+	/**
+	 * Draws relevant UI on screen
+	 */
 	private fun drawUI(canvas: Canvas) {
 		when (gameState) {
 			GameState.GAME_OVER -> {
@@ -194,7 +204,7 @@ class EndlessMode(context: Context): GameMode(context) {
 		canvas.drawText(scoreText, 0f, 50f, uiTextPaint)
 	}
 	
-	fun performReload() = playerBehaviour.reload()
+	fun performReload() = playerBehaviour.reload() // reload using UI button created in Activity
 	
 	@SuppressLint("ClickableViewAccessibility")
 	override fun onTouchEvent(event: MotionEvent?): Boolean {

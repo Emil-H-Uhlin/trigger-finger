@@ -5,20 +5,34 @@ import emi.uhl.triggerfinger.game.Game
 import emi.uhl.triggerfinger.math.Vector2
 import kotlin.math.sin
 
+/**
+ * @author Emil Uhlin, EMUH0001
+ * Handles Lava in EndlessMode
+ */
 class LavaBehaviour(private val lavaMinSpeed: Float,
                     private val playerTransform: Transform,
                     private val waveSpeed: Float = 12.5f): Component() {
 	
+	/**
+	 * Color for highest level of lava
+	 */
 	private val lavaPaint: Paint = Paint().apply {
 		color = Color.rgb(1f, (100f / 255f), 0f)
 		style = Paint.Style.FILL
 	}
 	
+	/**
+	 * Color for deeper lava
+	 */
 	private val deepLavaPaint: Paint = Paint().apply {
 		color = Color.rgb((209f / 255f), (70f / 255f), 0f)
 		style = Paint.Style.FILL
 	}
 	
+	/**
+	 * Speed of lava
+	 * Faster lava when player is far away
+	 */
 	private val speed: Float get() {
 		val yDiff = transform.position.y - playerTransform.position.y
 		
@@ -28,7 +42,7 @@ class LavaBehaviour(private val lavaMinSpeed: Float,
 		return (lavaMinSpeed * Game.toUnits(yDiff)).coerceAtLeast(lavaMinSpeed)
 	}
 	
-	private var xOffset = 0f
+	private var xOffset = 0f // used for path generation
 	
 	override fun update(deltaTime: Float) {
 		transform.position += Vector2.up * speed * deltaTime
@@ -39,6 +53,10 @@ class LavaBehaviour(private val lavaMinSpeed: Float,
 		xOffset += waveSpeed * deltaTime
 	}
 	
+	/**
+	 * Generates a path that gets filled to render lava
+	 * Uses a matrix to transform (flip by scale -1 and translate downwards)
+	 */
 	override fun draw(canvas: Canvas, paint: Paint?) {
 		val path = Path().apply {
 			moveTo(transform.position.x, transform.position.y)

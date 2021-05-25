@@ -9,6 +9,10 @@ import emi.uhl.triggerfinger.physics.CollisionShape
 import emi.uhl.triggerfinger.physics.Physics
 import kotlin.random.Random
 
+/**
+ * @author Emil Uhlin, EMUH0001
+ * Handles pipe-spawning in FlappyMode
+ */
 class PipeSpawner(private val flappyMode: FlappyMode,
                   private val spawnDistance: Float,
                   private val pipeSpeed: Float,
@@ -19,6 +23,7 @@ class PipeSpawner(private val flappyMode: FlappyMode,
 	var totalMoved: Float = spawnDistance
 	
 	override fun update(deltaTime: Float) {
+		// move pipes left and destroy them when off-screen
 		pipes.forEach {
 			it.transform.position += Vector2.left * pipeSpeed * deltaTime
 			
@@ -29,6 +34,7 @@ class PipeSpawner(private val flappyMode: FlappyMode,
 		
 		totalMoved += pipeSpeed * deltaTime
 		
+		// clean up pipes and add score to game mode
 		for (i in pipes.count() - 1 downTo 0) {
 			val pipe = pipes[i]
 			
@@ -45,11 +51,15 @@ class PipeSpawner(private val flappyMode: FlappyMode,
 		}
 	}
 	
+	/**
+	 * Spawns two new pipes with spacing at random center
+	 */
 	private fun createPipes() {
-		val offset = Game.screenHeight * (0.35f + Random.nextFloat() * (0.65f - 0.35f))
+		val offset = Game.screenHeight * (0.35f + Random.nextFloat() * (0.65f - 0.35f)) // random between 35% and 65% of screen height
 		
+		// create and add new pipe to game and pipes-list
 		run {
-			val sprite = Sprite(pipeSprite).apply { flipY = true }
+			val sprite = Sprite(pipeSprite).apply { flipY = true } // top pipe needs to be flipped upside down
 			
 			val shape = CollisionShape.CollisionRectangle(sprite.size.x, sprite.origin.y * 2, 0, Physics.ENEMY)
 			
@@ -65,6 +75,7 @@ class PipeSpawner(private val flappyMode: FlappyMode,
 			flappyMode.addGameObject(pipe)
 		}
 		
+		// create and add new pipe to game and pipes-list
 		run {
 			val sprite = Sprite(pipeSprite)
 			val shape = CollisionShape.CollisionRectangle(sprite.size.x, sprite.size.y, 0, Physics.ENEMY)

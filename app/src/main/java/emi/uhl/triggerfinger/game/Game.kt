@@ -1,7 +1,12 @@
 package emi.uhl.triggerfinger.game
 
+/**
+ * @author Emil Uhlin, EMUH0001
+ *
+ * Set of game-related properties
+ */
 object Game {
-	const val PIXELS_IN_UNIT: Int = 200
+	private const val PIXELS_IN_UNIT: Int = 200
 	
 	@JvmStatic var screenWidth: Int = -1
 	@JvmStatic var screenHeight: Int = -1
