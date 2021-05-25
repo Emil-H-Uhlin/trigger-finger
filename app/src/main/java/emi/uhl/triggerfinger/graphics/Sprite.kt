@@ -14,7 +14,7 @@ open class Sprite(var bitmap: Bitmap,
     val origin get() = Vector2(bitmap.width / 2f, bitmap.height / 2f) * scale
     private val degrees get() = Math.toDegrees(transform.rotation.toDouble()).toFloat() % 360
     
-    val size: Vector2 get() = Vector2(bitmap.width, bitmap.height)
+    val size: Vector2 get() = Vector2(bitmap.width, bitmap.height) * scale
     
     override fun draw(canvas: Canvas, paint: Paint?) {
         val xScale: Float = (if (flipX) -1f else 1f) * scale

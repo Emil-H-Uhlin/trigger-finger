@@ -34,6 +34,7 @@ class PipeSpawner(private val flappyMode: FlappyMode,
 			
 			if (pipe.destroyed) {
 				pipes.remove(pipe)
+				flappyMode.score++
 			}
 		}
 		
@@ -45,35 +46,39 @@ class PipeSpawner(private val flappyMode: FlappyMode,
 	}
 	
 	private fun createPipes() {
-		val offset = Game.screenHeight * Random.nextFloat().coerceIn(.35f.. .65f)
+		val offset = Game.screenHeight * (0.35f + Random.nextFloat() * (0.65f - 0.35f))
 		
-		var sprite = Sprite(pipeSprite).apply {
-			flipY = true
+		run {
+			val sprite = Sprite(pipeSprite).apply { flipY = true }
+			
+			val shape = CollisionShape.CollisionRectangle(sprite.size.x, sprite.origin.y * 2, 0, Physics.ENEMY)
+			
+			val pipe = GameObject.Builder("Pipe top")
+				.withComponent(sprite)
+				.withComponent(shape)
+				.withTransform(
+					position = Vector2(Game.screenWidth + sprite.origin.x, (offset - spaceTopBottom / 2f) - sprite.size.y + sprite.origin.y)
+				)
+				.build()
+			
+			pipes.add(pipe)
+			flappyMode.addGameObject(pipe)
 		}
 		
-		var shape = CollisionShape.CollisionRectangle(sprite.size.x, sprite.size.y, 0, Physics.ENEMY)
-		
-		var pipe = GameObject.Builder("Pipe top")
-			.withComponent(sprite)
-			.withComponent(shape)
-			.build().apply {
-				transform.position = Vector2(Game.screenWidth + sprite.origin.x, (offset - spaceTopBottom / 2f) - sprite.size.y)
-			}
-		
-		pipes.add(pipe)
-		flappyMode.addGameObject(pipe)
-		
-		sprite = Sprite(pipeSprite)
-		shape = CollisionShape.CollisionRectangle(sprite.size.x, sprite.size.y, 0, Physics.ENEMY)
-		
-		pipe = GameObject.Builder("Pipe bottom")
-			.withComponent(sprite)
-			.withComponent(shape)
-			.build().apply {
-				transform.position = Vector2(Game.screenWidth + sprite.origin.x, (offset + spaceTopBottom / 2f))
-			}
-		
-		pipes.add(pipe)
-		flappyMode.addGameObject(pipe)
+		run {
+			val sprite = Sprite(pipeSprite)
+			val shape = CollisionShape.CollisionRectangle(sprite.size.x, sprite.size.y, 0, Physics.ENEMY)
+			
+			val pipe = GameObject.Builder("Pipe bottom")
+				.withComponent(sprite)
+				.withComponent(shape)
+				.withTransform(
+					position = Vector2(Game.screenWidth + sprite.origin.x, (offset + spaceTopBottom / 2f) + sprite.origin.y)
+				)
+				.build()
+			
+			pipes.add(pipe)
+			flappyMode.addGameObject(pipe)
+		}
 	}
 }

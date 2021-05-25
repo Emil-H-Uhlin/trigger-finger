@@ -10,7 +10,7 @@ abstract class GameMode(context: Context): SurfaceView(context), Runnable {
 	@Volatile private var running = false
 	private lateinit var gameThread: Thread
 	
-	protected var score: Int = 0
+	var score: Int = 0
 	
 	var prevFrameTime: Long = -1
 	

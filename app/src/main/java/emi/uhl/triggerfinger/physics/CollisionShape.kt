@@ -1,5 +1,8 @@
 package emi.uhl.triggerfinger.physics
 
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.RectF
 import emi.uhl.triggerfinger.gameObjects.Component
 import emi.uhl.triggerfinger.gameObjects.GameObject
@@ -54,6 +57,10 @@ sealed class CollisionShape(val layerMask: Int,
 		
 		override fun contains(point: Vector2): Boolean = Vector2.distance(transform.position, point) <= radius
 		override fun contains(x: Float, y: Float): Boolean = contains(Vector2(x, y))
+		
+		override fun draw(canvas: Canvas, paint: Paint?) {
+			canvas.drawCircle(transform.position.x, transform.position.y, radius, Paint().apply { color = Color.GREEN; style = Paint.Style.STROKE })
+		}
 	}
 	
 	class CollisionRectangle(private var width: Float,
@@ -64,8 +71,8 @@ sealed class CollisionShape(val layerMask: Int,
 		val rect: RectF get() = RectF(
 			transform.position.x - width / 2f,
 			transform.position.y - height / 2f,
-			transform.position.x + width,
-			transform.position.y + height
+			(transform.position.x - width / 2f) + width,
+			(transform.position.y - height / 2f) + height
 		)
 		
 		override fun collidesWith(circle: CollisionCircle): Boolean {
@@ -94,5 +101,9 @@ sealed class CollisionShape(val layerMask: Int,
 		
 		override fun contains(point: Vector2): Boolean = contains(point.x, point.y)
 		override fun contains(x: Float, y: Float): Boolean = rect.contains(x, y)
+		
+		override fun draw(canvas: Canvas, paint: Paint?) {
+			canvas.drawRect(rect, Paint().apply { color = Color.RED; style = Paint.Style.STROKE })
+		}
 	}
 }

@@ -38,19 +38,29 @@ class EndlessMode(context: Context): GameMode(context) {
 		
 		val playerSpriteSheet = BitmapFactory.decodeResource(resources,
 			R.drawable.gun_player_shoot, opts)
+		
 		val gunSprite: Bitmap = Bitmap.createBitmap(playerSpriteSheet, 0, 0, 64, 48)
 		
 		val shootAnimation = Animation(playerSpriteSheet, 8, 64, 48)
 		
+		val playerSprite = Sprite(gunSprite, scale = 4.5f).apply { flipY = true }
+		
 		player = GameObject.Builder("Player")
-			.withComponent(Sprite(gunSprite, scale = 4.5f))
+			.withComponent(playerSprite)
 			.withComponent(Animator())
-			.withComponent(CollisionShape.CollisionCircle(30f, Physics.ENEMY, Physics.PLAYER))
+			.withComponent(CollisionShape.CollisionCircle(max(playerSprite.size.x, playerSprite.size.y) / 2f - 50, Physics.ENEMY, Physics.PLAYER).apply {
+				onCollision.add {
+					gameState = GameState.GAME_OVER
+				}
+			})
 			.withComponent(PhysicsBody())
-			.withComponent(PlayerBehaviour(30, shootAnimation))
+			.withComponent(PlayerBehaviour(
+				maxAmmo = 30,
+				quickshotModifier = 2f,
+				shootAnimation = shootAnimation))
 			.withTransform(
-				position = Vector2(resources.displayMetrics.widthPixels / 2f, 0f),
-				rotation = (Math.PI * 2f * 1f / 4f).toFloat())
+				position = Vector2(300, Game.screenHeight / 2),
+				rotation = (Math.PI - Math.PI * 0.3).toFloat())
 			.build()
 		
 		playerBehaviour = player.getComponent()!!
@@ -146,7 +156,9 @@ class EndlessMode(context: Context): GameMode(context) {
 		canvas.translate(worldPosition.x, worldPosition.y)
 		
 		for (layer in DrawingLayer.values()) {
-			gameObjects.forEach { it.draw(canvas, null, layer) }
+			for (i in 0 until gameObjects.count()) {
+				gameObjects[i].draw(canvas, null, layer)
+			}
 		}
 		
 		canvas.restore()

@@ -12,6 +12,7 @@ import emi.uhl.triggerfinger.gameObjects.PlayerBehaviour
 import emi.uhl.triggerfinger.R
 import emi.uhl.triggerfinger.TouchEventHandler
 import emi.uhl.triggerfinger.gameObjects.PipeSpawner
+import emi.uhl.triggerfinger.gameObjects.SeamlessBackground
 import emi.uhl.triggerfinger.graphics.Animation
 import emi.uhl.triggerfinger.graphics.Animator
 import emi.uhl.triggerfinger.graphics.DrawingLayer
@@ -20,6 +21,7 @@ import emi.uhl.triggerfinger.math.Vector2
 import emi.uhl.triggerfinger.physics.CollisionShape
 import emi.uhl.triggerfinger.physics.Physics
 import emi.uhl.triggerfinger.physics.PhysicsBody
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 class FlappyMode(context: Context): GameMode(context) {
@@ -27,6 +29,7 @@ class FlappyMode(context: Context): GameMode(context) {
 	
 	private val player: GameObject
 	private val playerBehaviour: PlayerBehaviour
+	private val pipeSpawner: PipeSpawner
 	
 	private var worldPosition: Vector2
 	
@@ -40,18 +43,22 @@ class FlappyMode(context: Context): GameMode(context) {
 		
 		val shootAnimation = Animation(playerSpriteSheet, 8, 64, 48)
 		
-		val playerSprite = Sprite(gunSprite, scale = 4.5f)
+		val playerSprite = Sprite(gunSprite, scale = 4.5f).apply { flipY = true }
 		
 		player = GameObject.Builder("Player")
 			.withComponent(playerSprite)
 			.withComponent(Animator())
-			.withComponent(CollisionShape.CollisionCircle(30f, Physics.ENEMY, Physics.PLAYER).apply {
+			.withComponent(CollisionShape.CollisionCircle(max(playerSprite.size.x, playerSprite.size.y) / 2f - 50, Physics.ENEMY, Physics.PLAYER).apply {
 				onCollision.add {
 					gameState = GameState.GAME_OVER
 				}
 			})
 			.withComponent(PhysicsBody(freezeX = true))
-			.withComponent(PlayerBehaviour(99999, shootAnimation))
+			.withComponent(PlayerBehaviour(
+				maxAmmo = 99999,
+				shootForce = 1200f,
+				quickshotModifier = 1.0f,
+				shootAnimation = shootAnimation))
 			.withTransform(
 				position = Vector2(300, Game.screenHeight / 2),
 				rotation = (Math.PI - Math.PI * 0.3).toFloat())
@@ -59,11 +66,32 @@ class FlappyMode(context: Context): GameMode(context) {
 		
 		playerBehaviour = player.getComponent()!!
 		
+		worldPosition = Vector2.left * resources.displayMetrics.widthPixels.toFloat() / 2f
+		
+		val pipeSprite = BitmapFactory.decodeResource(resources, R.drawable.pipe, opts);
+		
+		val spawner = GameObject.Builder("Pipe-spawner")
+			.withComponent(PipeSpawner(
+				flappyMode = this,
+				spawnDistance = 600f,
+				pipeSpeed = 275f,
+				pipeSprite = pipeSprite,
+				spaceTopBottom = Game.toPixels(4f)))
+			.build()
+		
+		pipeSpawner = spawner.getComponent()!!
+		
+		val background = GameObject.Builder("Seamless background", DrawingLayer.BACKGROUND)
+			.withComponent(SeamlessBackground(BitmapFactory.decodeResource(resources, R.drawable.sunsetbackground, opts), 150f))
+			.build()
+		
+		gameObjects = arrayListOf(player, spawner, background,)
+		
 		TouchEventHandler.run {
 			touchStartEvent.add { _, _ ->
 				if (gameState == GameState.PLAYING)
 					if (playerBehaviour.remainingAmmo > 0 && !playerBehaviour.cooldown)
-						Game.timeScale = 0.4f
+						Game.timeScale = 0.6f
 			}
 			
 			touchEndEvent.add { _, _ ->
@@ -71,18 +99,6 @@ class FlappyMode(context: Context): GameMode(context) {
 				Game.timeScale = 1.0f
 			}
 		}
-		
-		worldPosition = Vector2.left * resources.displayMetrics.widthPixels.toFloat() / 2f
-		
-		val pipeSprite = BitmapFactory.decodeResource(resources, R.drawable.pipe, opts);
-		
-		val pipeSpawner = GameObject.Builder("Pipe-spawner")
-			.withComponent(PipeSpawner(this, 500f, 250f, pipeSprite))
-			.build()
-		
-		gameObjects = arrayListOf(player, pipeSpawner)
-		
-		gameState = GameState.PLAYING
 	}
 	
 	override fun update(deltaTime: Float) {
@@ -123,9 +139,13 @@ class FlappyMode(context: Context): GameMode(context) {
 				if (TouchEventHandler.isTouching) TouchEventHandler.onTouchHold()
 			}
 			
-			else -> {
+			GameState.GAME_OVER -> {
 				player.transform.rotation += 20f * deltaTime
 				player.transform.position += Vector2.down * Game.screenHeight.toFloat() * deltaTime
+			}
+			
+			else -> {
+			
 			}
 		}
 		
@@ -140,8 +160,12 @@ class FlappyMode(context: Context): GameMode(context) {
 		canvas.drawColor(Color.BLACK)
 		
 		for (layer in DrawingLayer.values()) {
-			gameObjects.forEach { it.draw(canvas, null, layer) }
+			for (i in 0 until gameObjects.count()) {
+				gameObjects[i].draw(canvas, null, layer)
+			}
 		}
+		
+		drawUI(canvas)
 		
 		holder.unlockCanvasAndPost(canvas)
 	}
