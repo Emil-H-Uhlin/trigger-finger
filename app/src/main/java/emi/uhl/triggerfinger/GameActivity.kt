@@ -1,5 +1,6 @@
 package emi.uhl.triggerfinger
 
+import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
@@ -13,11 +14,18 @@ import emi.uhl.triggerfinger.game.GameMode
 class GameActivity : AppCompatActivity() {
 	private lateinit var game: GameMode
 	
+	private lateinit var mediaPlayer: MediaPlayer
+	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		
+		mediaPlayer = MediaPlayer.create(this, R.raw.slowmotion).apply {
+			isLooping = true
+			start()
+		}
+		
 		val frame = FrameLayout(this)
-		game = FlappyMode(this)
+		game = EndlessMode(this)
 		
 		when (game) {
 			is FlappyMode -> {
@@ -59,11 +67,13 @@ class GameActivity : AppCompatActivity() {
 		super.onResume()
 		
 		game.resume()
+		mediaPlayer.start()
 	}
 	
 	override fun onPause() {
 		super.onPause()
 		
 		game.pause()
+		mediaPlayer.pause()
 	}
 }

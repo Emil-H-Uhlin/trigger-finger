@@ -3,6 +3,8 @@ package emi.uhl.triggerfinger.game
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
+import android.media.AudioAttributes
+import android.media.SoundPool
 import android.view.SurfaceView
 import emi.uhl.triggerfinger.gameObjects.GameObject
 
@@ -19,6 +21,8 @@ abstract class GameMode(context: Context): SurfaceView(context), Runnable {
 	
 	protected var gameState: GameState = GameState.PAUSED
 	
+	lateinit var soundPool: SoundPool
+	
 	val uiTextPaint: Paint = Paint().apply {
 		color = Color.WHITE
 		textSize = 48f
@@ -34,6 +38,16 @@ abstract class GameMode(context: Context): SurfaceView(context), Runnable {
 	init {
 		Game.screenWidth = resources.displayMetrics.widthPixels
 		Game.screenHeight = resources.displayMetrics.heightPixels
+		
+		val attributes = AudioAttributes.Builder()
+			.setUsage(AudioAttributes.USAGE_GAME)
+			.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+			.build()
+		
+		soundPool = SoundPool.Builder()
+			.setMaxStreams(6)
+			.setAudioAttributes(attributes)
+			.build()
 	}
 	
 	final override fun run() {

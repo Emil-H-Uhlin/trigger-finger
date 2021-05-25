@@ -59,8 +59,8 @@ class EndlessMode(context: Context): GameMode(context) {
 				quickshotModifier = 2f,
 				shootAnimation = shootAnimation))
 			.withTransform(
-				position = Vector2(300, Game.screenHeight / 2),
-				rotation = (Math.PI - Math.PI * 0.3).toFloat())
+				position = Vector2(Game.screenWidth / 2f, 0),
+				rotation = (Math.PI * 2 *  -3f/4f).toFloat())
 			.build()
 		
 		playerBehaviour = player.getComponent()!!
@@ -75,6 +75,8 @@ class EndlessMode(context: Context): GameMode(context) {
 		
 		gameObjects = arrayListOf(player, lava)
 		
+		val shotEffect = soundPool.load(context, R.raw.shoot_effect, 1)
+		
 		TouchEventHandler.run {
 			touchStartEvent.add { _, _ ->
 				if (gameState == GameState.PLAYING)
@@ -84,6 +86,7 @@ class EndlessMode(context: Context): GameMode(context) {
 			
 			touchEndEvent.add { _, _ ->
 				playerBehaviour.shoot(durationOfTouch < 0.2f && !wasDrag)
+				soundPool.play(shotEffect, 1.0f, 1.0f, 1, 0, 1.0f)
 				Game.timeScale = 1.0f
 			}
 		}
@@ -150,7 +153,7 @@ class EndlessMode(context: Context): GameMode(context) {
 		if (!holder.surface.isValid) return
 		
 		val canvas = holder.lockCanvas()
-		canvas.drawColor(Color.BLACK)
+		canvas.drawColor(Color.rgb(110, 197, 233))
 		
 		canvas.save()
 		canvas.translate(worldPosition.x, worldPosition.y)

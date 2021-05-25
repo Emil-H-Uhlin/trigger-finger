@@ -87,6 +87,8 @@ class FlappyMode(context: Context): GameMode(context) {
 		
 		gameObjects = arrayListOf(player, spawner, background,)
 		
+		val shotEffect = soundPool.load(context, R.raw.shoot_effect, 1)
+		
 		TouchEventHandler.run {
 			touchStartEvent.add { _, _ ->
 				if (gameState == GameState.PLAYING)
@@ -96,6 +98,7 @@ class FlappyMode(context: Context): GameMode(context) {
 			
 			touchEndEvent.add { _, _ ->
 				playerBehaviour.shoot(durationOfTouch < 0.2f && !wasDrag)
+				soundPool.play(shotEffect, 1.0f, 1.0f, 1, 0, 1.0f)
 				Game.timeScale = 1.0f
 			}
 		}
