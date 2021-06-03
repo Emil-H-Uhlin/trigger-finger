@@ -44,7 +44,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 	var prevFrameTime: Long = -1
 	
 	private val deltaTime: Float get() = (System.currentTimeMillis() - prevFrameTime).toFloat() / 1000 // time since last frame in seconds
-	private val scaledDeltaTime: Float get() = deltaTime * GameRules.timeScale // scaled delta time using time scale of game
+	private val scaledDeltaTime: Float get() = deltaTime * timeScale // scaled delta time using time scale of game
 	
 	var gameState: GameState = GameState.PAUSED // state of game
 	
@@ -64,10 +64,16 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		textSize = 128f
 	}
 	
+	companion object {
+		@JvmStatic var screenWidth: Int = -1
+		@JvmStatic var screenHeight: Int = -1
+		
+		@JvmStatic var timeScale: Float = 1.0f
+	}
 	
 	init {
-		GameRules.screenWidth = resources.displayMetrics.widthPixels
-		GameRules.screenHeight = resources.displayMetrics.heightPixels
+		screenWidth = resources.displayMetrics.widthPixels
+		screenHeight = resources.displayMetrics.heightPixels
 		
 		val opts = BitmapFactory.Options().apply { inScaled = false } // unscaled sprites preferred
 		
@@ -96,7 +102,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 				quickshotModifier = 2f,
 				shootAnimation = shootAnimation))
 			.withTransform(
-				position = Vector2(GameRules.screenWidth / 2f, 0),
+				position = Vector2(screenWidth / 2f, 0),
 				rotation = (Math.PI * 2 *  -3f/4f).toFloat())
 			.build()
 		
@@ -117,13 +123,13 @@ class Game(context: Context): SurfaceView(context), Runnable {
 			touchStartEvent.add { _, _ ->
 				if (gameState == GameState.PLAYING)
 					if (playerBehaviour.remainingAmmo > 0 && !playerBehaviour.cooldown)
-						GameRules.timeScale = 0.4f
+						timeScale = 0.4f
 			}
 			
 			touchEndEvent.add { _, _ ->
 				playerBehaviour.shoot(durationOfTouch < 0.2f && !wasDrag)
 				
-				GameRules.timeScale = 1.0f
+				timeScale = 1.0f
 			}
 		}
 		
@@ -185,13 +191,13 @@ class Game(context: Context): SurfaceView(context), Runnable {
 				
 				if (player.transform.position.y > lava.transform.position.y) { // game over if gun falls into lava
 					gameState = GameState.GAME_OVER
-				} else if (playerDisplayPosition.y < GameRules.screenHeight * 1f / 2.5f) { // move world upward with player
-					worldPosition.y -= playerDisplayPosition.y - GameRules.screenHeight * 1f / 2.5f
+				} else if (playerDisplayPosition.y < screenHeight * 1f / 2.5f) { // move world upward with player
+					worldPosition.y -= playerDisplayPosition.y - screenHeight * 1f / 2.5f
 				}
 				
 				if (TouchEventHandler.isTouching) TouchEventHandler.onTouchHold()
 				
-				val heightUnits = -GameRules.toUnits(player.transform.position.y).roundToInt()
+				val heightUnits = -(player.transform.position.y / 200f).roundToInt()
 				maxHeight = maxHeight.coerceAtLeast(heightUnits)
 				
 				score = maxHeight + gainedScore
@@ -201,7 +207,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		prevFrameTime = System.currentTimeMillis()
 	}
 	
-	fun draw() {
+	private fun draw() {
 		if (!holder.surface.isValid) return
 		
 		val canvas = holder.lockCanvas()
@@ -229,17 +235,17 @@ class Game(context: Context): SurfaceView(context), Runnable {
 			GameState.GAME_OVER -> {
 				val gameOverText = "GAME OVER"
 				canvas.drawText(gameOverText,
-					(GameRules.screenWidth / 2 - gameOverPaint.measureText(gameOverText) / 2),
-					(lava.transform.position.y + worldPosition.y + GameRules.screenHeight / 2f).coerceIn(
-						(GameRules.screenHeight / 2f)..(GameRules.screenHeight + 300f)), gameOverPaint)
+					(screenWidth / 2 - gameOverPaint.measureText(gameOverText) / 2),
+					(lava.transform.position.y + worldPosition.y + screenHeight / 2f).coerceIn(
+						(screenHeight / 2f)..(screenHeight + 300f)), gameOverPaint)
 			}
 			
 			else -> {
-				val heightText = "Height: ${ -(GameRules.toUnits(player.transform.position.y)).roundToInt() }"
-				canvas.drawText(heightText, (GameRules.screenWidth / 2 - uiTextPaint.measureText(heightText) / 2), 50f, uiTextPaint)
+				val heightText = "Height: ${ -(player.transform.position.y / 200f).roundToInt() }"
+				canvas.drawText(heightText, (screenWidth / 2 - uiTextPaint.measureText(heightText) / 2), 50f, uiTextPaint)
 				
 				val ammoText = "${ playerBehaviour.remainingAmmo } / ${ playerBehaviour.maxAmmo }"
-				canvas.drawText(ammoText, GameRules.screenWidth - uiTextPaint.measureText(ammoText), 50f, uiTextPaint)
+				canvas.drawText(ammoText, screenWidth - uiTextPaint.measureText(ammoText), 50f, uiTextPaint)
 			}
 		}
 		

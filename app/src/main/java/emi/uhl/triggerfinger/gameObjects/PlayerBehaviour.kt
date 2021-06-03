@@ -1,6 +1,6 @@
 package emi.uhl.triggerfinger.gameObjects
 
-import emi.uhl.triggerfinger.game.GameRules
+import emi.uhl.triggerfinger.game.Game
 import emi.uhl.triggerfinger.graphics.Animation
 import emi.uhl.triggerfinger.graphics.Animator
 import emi.uhl.triggerfinger.graphics.Sprite
@@ -59,12 +59,12 @@ class PlayerBehaviour(var maxAmmo: Int,
 		if (timer > 0) timer -= deltaTime
 		
 		// flip sprite according to which side of the screen the object is located
-		sprite.flipY = transform.position.x < GameRules.screenWidth / 2f
+		sprite.flipY = transform.position.x < Game.screenWidth / 2f
 		
 		var bounce = false
 		
-		if (transform.position.x > GameRules.screenWidth - sprite.bitmap.width) {
-			transform.position.x = (GameRules.screenWidth - sprite.bitmap.width).toFloat()
+		if (transform.position.x > Game.screenWidth - sprite.bitmap.width) {
+			transform.position.x = (Game.screenWidth - sprite.bitmap.width).toFloat()
 			bounce = true
 		}
 		else if (transform.position.x < sprite.bitmap.width) {

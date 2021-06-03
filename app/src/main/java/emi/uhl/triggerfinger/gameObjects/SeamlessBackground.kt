@@ -3,7 +3,7 @@ package emi.uhl.triggerfinger.gameObjects
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import emi.uhl.triggerfinger.game.GameRules
+import emi.uhl.triggerfinger.game.Game
 import kotlin.math.roundToInt
 
 class SeamlessBackground(srcBitmap: Bitmap,
@@ -13,7 +13,7 @@ class SeamlessBackground(srcBitmap: Bitmap,
 	 * Scale srcBitmap so that it fills the screen vertically
 	 */
 	private val backgroundImage: Bitmap = let {
-		val scale = (GameRules.screenHeight.toFloat() / srcBitmap.height.toFloat())
+		val scale = (Game.screenHeight.toFloat() / srcBitmap.height.toFloat())
 		val width = srcBitmap.width * scale
 		val height = srcBitmap.height * scale
 		
@@ -34,7 +34,7 @@ class SeamlessBackground(srcBitmap: Bitmap,
 	 * Draws required amount of images to fill the width of the screen (at most probably 2)
 	 */
 	override fun draw(canvas: Canvas, paint: Paint?) {
-		for (x in backgroundX.roundToInt() until GameRules.screenWidth step backgroundImage.width) {
+		for (x in backgroundX.roundToInt() until Game.screenWidth step backgroundImage.width) {
 			canvas.drawBitmap(backgroundImage, x.toFloat(), 0f, paint)
 		}
 	}
