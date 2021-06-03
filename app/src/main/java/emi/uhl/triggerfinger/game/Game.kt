@@ -1,18 +1,312 @@
 package emi.uhl.triggerfinger.game
 
-/**
- * @author Emil Uhlin, EMUH0001
- *
- * Set of game-related properties
- */
-object Game {
-	private const val PIXELS_IN_UNIT: Int = 200
+import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.*
+import android.media.AudioAttributes
+import android.media.SoundPool
+import android.view.MotionEvent
+import android.view.SurfaceView
+import emi.uhl.triggerfinger.R
+import emi.uhl.triggerfinger.TouchEventHandler
+import emi.uhl.triggerfinger.gameObjects.GameObject
+import emi.uhl.triggerfinger.gameObjects.LavaBehaviour
+import emi.uhl.triggerfinger.gameObjects.PlayerBehaviour
+import emi.uhl.triggerfinger.graphics.Animation
+import emi.uhl.triggerfinger.graphics.Animator
+import emi.uhl.triggerfinger.graphics.DrawingLayer
+import emi.uhl.triggerfinger.graphics.Sprite
+import emi.uhl.triggerfinger.math.Vector2
+import emi.uhl.triggerfinger.physics.CollisionShape
+import emi.uhl.triggerfinger.physics.Physics
+import emi.uhl.triggerfinger.physics.PhysicsBody
+import kotlin.math.max
+import kotlin.math.roundToInt
+
+class Game(context: Context): SurfaceView(context), Runnable {
+	@Volatile private var running = false
+	private lateinit var gameThread: Thread
 	
-	@JvmStatic var screenWidth: Int = -1
-	@JvmStatic var screenHeight: Int = -1
+	val gameObjects: ArrayList<GameObject>
 	
-	@JvmStatic var timeScale: Float = 1.0f
+	private val player: GameObject
+	private val playerBehaviour: PlayerBehaviour
 	
-	@JvmStatic fun toUnits(value: Float): Float = value / PIXELS_IN_UNIT
-	@JvmStatic fun toPixels(value: Float): Float = value * PIXELS_IN_UNIT
+	private val lava: GameObject
+	private val lavaBehaviour: LavaBehaviour
+	
+	private var worldPosition: Vector2
+	
+	private var maxHeight: Int = 0
+	private var gainedScore: Int = 0
+	private var score: Int = 0
+	
+	var prevFrameTime: Long = -1
+	
+	private val deltaTime: Float get() = (System.currentTimeMillis() - prevFrameTime).toFloat() / 1000 // time since last frame in seconds
+	private val scaledDeltaTime: Float get() = deltaTime * GameRules.timeScale // scaled delta time using time scale of game
+	
+	var gameState: GameState = GameState.PAUSED // state of game
+	
+	/**
+	 * Paint used for drawing general UI-elements
+	 */
+	val uiTextPaint: Paint = Paint().apply {
+		color = Color.WHITE
+		textSize = 48f
+	}
+	
+	/**
+	 * Paint mainly used for drawing "GAME OVER" when game is over
+	 */
+	val gameOverPaint: Paint = Paint().apply {
+		color = Color.BLACK
+		textSize = 128f
+	}
+	
+	
+	init {
+		GameRules.screenWidth = resources.displayMetrics.widthPixels
+		GameRules.screenHeight = resources.displayMetrics.heightPixels
+		
+		val opts = BitmapFactory.Options().apply { inScaled = false } // unscaled sprites preferred
+		
+		val playerSpriteSheet = BitmapFactory.decodeResource(resources,
+			R.drawable.gun_player_shoot, opts)
+		
+		val gunSprite: Bitmap = Bitmap.createBitmap(playerSpriteSheet, 0, 0, 64, 48)
+		val shootAnimation = Animation(playerSpriteSheet, 8, 64, 48)
+		val playerSprite = Sprite(gunSprite, scale = 4.5f).apply { flipY = true }
+		
+		player = GameObject.Builder("Player") // build player object
+			.withComponent(playerSprite)
+			.withComponent(Animator())
+			.withComponent(
+				CollisionShape.CollisionCircle(
+					max(playerSprite.size.x, playerSprite.size.y) / 2f - 50,
+					Physics.ENEMY,
+					Physics.PLAYER).apply {
+					onCollision.add {
+						gameState = GameState.GAME_OVER
+					}
+				})
+			.withComponent(PhysicsBody())
+			.withComponent(PlayerBehaviour(
+				maxAmmo = 30,
+				quickshotModifier = 2f,
+				shootAnimation = shootAnimation))
+			.withTransform(
+				position = Vector2(GameRules.screenWidth / 2f, 0),
+				rotation = (Math.PI * 2 *  -3f/4f).toFloat())
+			.build()
+		
+		playerBehaviour = player.getComponent()!! // store player behaviour for easy access
+		
+		lava = GameObject.Builder("Lava") // build lava object
+			.withComponent(LavaBehaviour(225f, player.transform))
+			.withTransform(
+				position = Vector2(0f, resources.displayMetrics.heightPixels.toFloat() * .2f)
+			)
+			.build()
+		
+		lavaBehaviour = lava.getComponent()!! // store lava behaviour for easy access
+		
+		gameObjects = arrayListOf(player, lava) // initialize list of game objects
+		
+		TouchEventHandler.run {
+			touchStartEvent.add { _, _ ->
+				if (gameState == GameState.PLAYING)
+					if (playerBehaviour.remainingAmmo > 0 && !playerBehaviour.cooldown)
+						GameRules.timeScale = 0.4f
+			}
+			
+			touchEndEvent.add { _, _ ->
+				playerBehaviour.shoot(durationOfTouch < 0.2f && !wasDrag)
+				
+				GameRules.timeScale = 1.0f
+			}
+		}
+		
+		worldPosition = Vector2.down * resources.displayMetrics.heightPixels.toFloat() / 2f
+	}
+	
+	/**
+	 * Executes main game loop using java Thread (should be replaced with kotlin coroutine)
+	 */
+	override fun run() {
+		while (running) {
+			update(scaledDeltaTime)
+			draw()
+		}
+	}
+	
+	/**
+	 * Updates deltatime (use super.update(..) to get correct deltatime every frame)
+	 */
+	private fun update(deltaTime: Float) {
+		when (gameState) {
+			GameState.PAUSED -> lavaBehaviour.updateOffset(deltaTime) // render lava movement even when paused
+			
+			GameState.GAME_OVER -> lava.update(deltaTime) // update lava when game over
+			
+			GameState.PLAYING -> {
+				// safely update all game objects that were present at the start of the scene
+				for (i in 0 until gameObjects.count()) {
+					gameObjects[i].update(deltaTime)
+				}
+				
+				// check collision between each pair of game objects
+				for (i in 0 until gameObjects.count() - 1) {
+					val collider = gameObjects[i].getComponent<CollisionShape>() ?: continue // get collider or continue if null
+					
+					for (j in i until gameObjects.count()) {
+						val other = gameObjects[j].getComponent<CollisionShape>() ?: continue // get collider or continue if null
+						
+						if (collider.collidesWith(other)) {
+							collider.onCollision(other.gameObject)
+						}
+						
+						if (other.collidesWith(collider)) {
+							other.onCollision(other.gameObject)
+						}
+					}
+				}
+				
+				// safely remove destroyed game objects
+				for (i in gameObjects.count() - 1 downTo 0) {
+					val gameObject = gameObjects[i]
+					
+					if (gameObject.destroyed) {
+						gameObjects.remove(gameObject)
+					}
+				}
+				
+				val playerDisplayPosition = player.transform.position - -worldPosition // player position on screen
+				
+				if (player.transform.position.y > lava.transform.position.y) { // game over if gun falls into lava
+					gameState = GameState.GAME_OVER
+				} else if (playerDisplayPosition.y < GameRules.screenHeight * 1f / 2.5f) { // move world upward with player
+					worldPosition.y -= playerDisplayPosition.y - GameRules.screenHeight * 1f / 2.5f
+				}
+				
+				if (TouchEventHandler.isTouching) TouchEventHandler.onTouchHold()
+				
+				val heightUnits = -GameRules.toUnits(player.transform.position.y).roundToInt()
+				maxHeight = maxHeight.coerceAtLeast(heightUnits)
+				
+				score = maxHeight + gainedScore
+			}
+		}
+		
+		prevFrameTime = System.currentTimeMillis()
+	}
+	
+	fun draw() {
+		if (!holder.surface.isValid) return
+		
+		val canvas = holder.lockCanvas()
+		canvas.drawColor(Color.rgb(110, 197, 233))
+		
+		canvas.save()
+		canvas.translate(worldPosition.x, worldPosition.y)
+		
+		// draw all game objects in order of their drawing layers
+		for (layer in DrawingLayer.values()) {
+			for (i in 0 until gameObjects.count()) {
+				gameObjects[i].draw(canvas, null, layer)
+			}
+		}
+		
+		canvas.restore() // restore position of canvas for UI
+		
+		drawUI(canvas) // draw UI
+		
+		holder.unlockCanvasAndPost(canvas) // render frame
+	}
+	
+	private fun drawUI(canvas: Canvas) {
+		when (gameState) {
+			GameState.GAME_OVER -> {
+				val gameOverText = "GAME OVER"
+				canvas.drawText(gameOverText,
+					(GameRules.screenWidth / 2 - gameOverPaint.measureText(gameOverText) / 2),
+					(lava.transform.position.y + worldPosition.y + GameRules.screenHeight / 2f).coerceIn(
+						(GameRules.screenHeight / 2f)..(GameRules.screenHeight + 300f)), gameOverPaint)
+			}
+			
+			else -> {
+				val heightText = "Height: ${ -(GameRules.toUnits(player.transform.position.y)).roundToInt() }"
+				canvas.drawText(heightText, (GameRules.screenWidth / 2 - uiTextPaint.measureText(heightText) / 2), 50f, uiTextPaint)
+				
+				val ammoText = "${ playerBehaviour.remainingAmmo } / ${ playerBehaviour.maxAmmo }"
+				canvas.drawText(ammoText, GameRules.screenWidth - uiTextPaint.measureText(ammoText), 50f, uiTextPaint)
+			}
+		}
+		
+		val scoreText = "Score: $score";
+		canvas.drawText(scoreText, 0f, 50f, uiTextPaint)
+	}
+	
+	/**
+	 * Adds a new game object to the scene
+	 */
+	fun addGameObject(gameObject: GameObject) {
+		gameObjects.add(gameObject)
+	}
+	
+	fun performReload() = playerBehaviour.reload()
+	
+	fun resume() {
+		running = true
+		prevFrameTime = System.currentTimeMillis()
+		
+		gameThread = Thread(this)
+		gameThread.start()
+	}
+	
+	fun pause() {
+		running = false
+		
+		try { gameThread.join() }
+		catch (exception: Exception) { println("Error joining thread " + exception.printStackTrace()) }
+	}
+	
+	@SuppressLint("ClickableViewAccessibility")
+	override fun onTouchEvent(event: MotionEvent?): Boolean {
+		event?.run {
+			val screenPoint = Vector2(event.x, event.y) - worldPosition
+			
+			when (action) {
+				MotionEvent.ACTION_DOWN -> {
+					if (gameState == GameState.PAUSED) gameState = GameState.PLAYING
+					
+					TouchEventHandler.onTouchStart(
+						screenPoint.x,
+						screenPoint.y
+					)
+					
+					return true
+				}
+				
+				MotionEvent.ACTION_MOVE -> {
+					TouchEventHandler.onTouchDrag(
+						screenPoint.x,
+						screenPoint.y
+					)
+					return true
+				}
+				
+				MotionEvent.ACTION_UP -> {
+					TouchEventHandler.onTouchEnd(
+						screenPoint.x,
+						screenPoint.y
+					)
+					return true
+				}
+				else -> return false
+			}
+		}
+		
+		return super.onTouchEvent(event)
+	}
 }

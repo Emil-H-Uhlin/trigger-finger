@@ -1,14 +1,10 @@
 package emi.uhl.triggerfinger.gameObjects
 
 import android.graphics.*
-import emi.uhl.triggerfinger.game.Game
+import emi.uhl.triggerfinger.game.GameRules
 import emi.uhl.triggerfinger.math.Vector2
 import kotlin.math.sin
 
-/**
- * @author Emil Uhlin, EMUH0001
- * Handles Lava in EndlessMode
- */
 class LavaBehaviour(private val lavaMinSpeed: Float,
                     private val playerTransform: Transform,
                     private val waveSpeed: Float = 12.5f): Component() {
@@ -39,7 +35,7 @@ class LavaBehaviour(private val lavaMinSpeed: Float,
 		if (yDiff < 0)
 			return lavaMinSpeed * 3f
 		
-		return (lavaMinSpeed * Game.toUnits(yDiff)).coerceAtLeast(lavaMinSpeed)
+		return (lavaMinSpeed * GameRules.toUnits(yDiff)).coerceAtLeast(lavaMinSpeed)
 	}
 	
 	private var xOffset = 0f // used for path generation
@@ -62,21 +58,21 @@ class LavaBehaviour(private val lavaMinSpeed: Float,
 			moveTo(transform.position.x, transform.position.y)
 			
 			var prevY = 0f
-			for (x in 0..Game.screenWidth step 25) {
+			for (x in 0..GameRules.screenWidth step 25) {
 				prevY = transform.position.y + sin(x + xOffset) * 20
 				lineTo(x.toFloat(), prevY)
 			}
 			
-			lineTo(Game.screenWidth.toFloat(), prevY)
-			lineTo(Game.screenWidth.toFloat(), Game.screenHeight.toFloat())
-			lineTo(transform.position.x, Game.screenHeight.toFloat())
+			lineTo(GameRules.screenWidth.toFloat(), prevY)
+			lineTo(GameRules.screenWidth.toFloat(), GameRules.screenHeight.toFloat())
+			lineTo(transform.position.x, GameRules.screenHeight.toFloat())
 		}
 		
 		canvas.drawPath(path, lavaPaint)
 		
 		canvas.drawPath(path.apply { 
 			transform(Matrix().apply {
-				postTranslate(-Game.screenWidth.toFloat(), 125f)
+				postTranslate(-GameRules.screenWidth.toFloat(), 125f)
 				postScale(-1f, 1f) })}, deepLavaPaint)
 	}
 }

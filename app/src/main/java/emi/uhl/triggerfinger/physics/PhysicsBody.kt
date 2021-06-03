@@ -1,13 +1,9 @@
 package emi.uhl.triggerfinger.physics
 
 import emi.uhl.triggerfinger.gameObjects.Component
-import emi.uhl.triggerfinger.game.Game
+import emi.uhl.triggerfinger.game.GameRules
 import emi.uhl.triggerfinger.math.Vector2
 
-/**
- * @author Emil Uhlin
- * A component that allows for gravity and force manipulations of game object transforms
- */
 class PhysicsBody(var velocity: Vector2 = Vector2.zero,
                   var angleVelocity: Float = .0f,
                   var useGravity: Boolean = true,
@@ -20,8 +16,8 @@ class PhysicsBody(var velocity: Vector2 = Vector2.zero,
 		if (useGravity) velocity += Physics.GRAVITY * deltaTime
 		
 		if (useDamping) {
-			velocity += -velocity * Physics.DAMPING * Game.timeScale
-			angleVelocity -= angleVelocity * Physics.DAMPING * Game.timeScale
+			velocity += -velocity * Physics.DAMPING * GameRules.timeScale
+			angleVelocity -= angleVelocity * Physics.DAMPING * GameRules.timeScale
 		}
 		
 		val vel = Vector2(if (freezeX) 0f else velocity.x, if (freezeY) 0f else velocity.y)

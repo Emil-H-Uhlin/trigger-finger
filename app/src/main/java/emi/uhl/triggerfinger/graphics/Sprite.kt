@@ -6,10 +6,6 @@ import android.graphics.Paint
 import emi.uhl.triggerfinger.gameObjects.Component
 import emi.uhl.triggerfinger.math.Vector2
 
-/**
- * @author Emil Uhlin, EMUH0001
- * Component that draws a bitmap
- */
 class Sprite(var bitmap: Bitmap,
                   var scale: Float = 1.0f,
                   var flipX: Boolean = false,

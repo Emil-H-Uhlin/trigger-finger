@@ -3,10 +3,6 @@ package emi.uhl.triggerfinger.gameObjects
 import android.graphics.Canvas
 import android.graphics.Paint
 
-/**
- * @author Emil Uhlin, EMUH0001
- * Base of GameObject/Component system
- */
 abstract class Component {
 	lateinit var gameObject: GameObject
 	val transform: Transform get() = gameObject.transform

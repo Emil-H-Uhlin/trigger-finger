@@ -13,15 +13,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         findViewById<Button>(R.id.btn_play).setOnClickListener {
             val gameActivity = Intent(this, GameActivity::class.java).apply {
                 putExtra("right_handed", findViewById<Switch>(R.id.tgl_right_handed).isChecked)
-                putExtra("game_mode", "base")
-            }
-            
-            startActivity(gameActivity)
-        }
-        
-        findViewById<Button>(R.id.btn_play_flappy).setOnClickListener {
-            val gameActivity = Intent(this, GameActivity::class.java).apply {
-                putExtra("game_mode", "flappy")
             }
     
             startActivity(gameActivity)

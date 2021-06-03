@@ -2,10 +2,6 @@ package emi.uhl.triggerfinger.physics
 
 import emi.uhl.triggerfinger.math.Vector2
 
-/**
- * @author Emil Uhlin, EMUH0001
- * Set of physics-related game rules
- */
 object Physics {
 	const val PLAYER: Int = 1 shl 0
 	const val ENEMY: Int = 1 shl 1

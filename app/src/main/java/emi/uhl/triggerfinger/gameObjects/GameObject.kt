@@ -5,12 +5,6 @@ import android.graphics.Paint
 import emi.uhl.triggerfinger.graphics.DrawingLayer
 import emi.uhl.triggerfinger.math.Vector2
 
-/**
- * @author Emil Uhlin, EMUH0001
- * Base of GameObject/Component system
- *
- * Requires the use of GameObject.Builder() to instantiate a new game object
- */
 class GameObject private constructor(private val name: String, private val drawingLayer: DrawingLayer = DrawingLayer.MIDDLE) {
 	/**
 	 * Used to build game objects when adding them to scene

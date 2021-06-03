@@ -7,11 +7,6 @@ typealias AnimationEvent = () -> Unit
 
 typealias Transition = (Any) -> Animation
 
-/**
- * @author Emil Uhlin, EMUH0001
- * Handles frame-animation of a bitmap spritesheet
- * Supports multi-row and column animations
- */
 data class Animation(val bitmap: Bitmap,
                      val frameCount: Int, val frameWidth: Int, val frameHeight: Int,
                      val rows: Int = 1, val columns: Int = frameCount, val firstFrameY: Int = 0) {

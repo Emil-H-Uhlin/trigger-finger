@@ -2,10 +2,6 @@ package emi.uhl.triggerfinger.math
 
 import kotlin.math.*
 
-/**
- * Two dimensional vector for vector movement and position logic of game objects
- * @author Emil Uhlin, EMUH0001
- */
 data class Vector2(var x: Float, var y: Float) {
     companion object {
         val zero : Vector2 =
