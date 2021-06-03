@@ -225,6 +225,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		canvas.restore() // restore position of canvas for UI
 		
+		
 		drawUI(canvas) // draw UI
 		
 		holder.unlockCanvasAndPost(canvas) // render frame
