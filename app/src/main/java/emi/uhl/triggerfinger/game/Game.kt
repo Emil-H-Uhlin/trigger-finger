@@ -51,7 +51,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 	/**
 	 * Paint used for drawing general UI-elements
 	 */
-	val uiTextPaint: Paint = Paint().apply {
+	private val uiTextPaint: Paint = Paint().apply {
 		color = Color.WHITE
 		textSize = 48f
 	}
@@ -59,7 +59,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 	/**
 	 * Paint mainly used for drawing "GAME OVER" when game is over
 	 */
-	val gameOverPaint: Paint = Paint().apply {
+	private val gameOverPaint: Paint = Paint().apply {
 		color = Color.BLACK
 		textSize = 128f
 	}
