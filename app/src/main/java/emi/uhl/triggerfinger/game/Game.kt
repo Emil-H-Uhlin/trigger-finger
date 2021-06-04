@@ -3,8 +3,6 @@ package emi.uhl.triggerfinger.game
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
-import android.media.AudioAttributes
-import android.media.SoundPool
 import android.view.MotionEvent
 import android.view.SurfaceView
 import emi.uhl.triggerfinger.R
@@ -22,10 +20,12 @@ import emi.uhl.triggerfinger.physics.Physics
 import emi.uhl.triggerfinger.physics.PhysicsBody
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlinx.coroutines.*
+import java.math.BigDecimal
+import kotlin.math.round
 
-class Game(context: Context): SurfaceView(context), Runnable {
+class Game(context: Context): SurfaceView(context) {
 	@Volatile private var running = false
-	private lateinit var gameThread: Thread
 	
 	val gameObjects: ArrayList<GameObject>
 	
@@ -69,6 +69,8 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		@JvmStatic var screenHeight: Int = -1
 		
 		@JvmStatic var timeScale: Float = 1.0f
+		
+		val debugging: Boolean = false
 	}
 	
 	init {
@@ -136,20 +138,7 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		worldPosition = Vector2.down * resources.displayMetrics.heightPixels.toFloat() / 2f
 	}
 	
-	/**
-	 * Executes main game loop using java Thread (should be replaced with kotlin coroutine)
-	 */
-	override fun run() {
-		while (running) {
-			update(scaledDeltaTime)
-			draw()
-		}
-	}
-	
-	/**
-	 * Updates deltatime (use super.update(..) to get correct deltatime every frame)
-	 */
-	private fun update(deltaTime: Float) {
+	private fun update(deltaTime: Float = scaledDeltaTime) {
 		when (gameState) {
 			GameState.PAUSED -> lavaBehaviour.updateOffset(deltaTime) // render lava movement even when paused
 			
@@ -225,7 +214,6 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		canvas.restore() // restore position of canvas for UI
 		
-		
 		drawUI(canvas) // draw UI
 		
 		holder.unlockCanvasAndPost(canvas) // render frame
@@ -252,6 +240,13 @@ class Game(context: Context): SurfaceView(context), Runnable {
 		
 		val scoreText = "Score: $score";
 		canvas.drawText(scoreText, 0f, 50f, uiTextPaint)
+		
+		if (debugging) {
+			val fps = 1.0f / (scaledDeltaTime / timeScale)
+			
+			val fpsText = "${fps.toBigDecimal().setScale(2, BigDecimal.ROUND_HALF_EVEN)} fps"
+			canvas.drawText(fpsText, screenWidth - uiTextPaint.measureText(fpsText), 200f, uiTextPaint)
+		}
 	}
 	
 	/**
@@ -263,23 +258,21 @@ class Game(context: Context): SurfaceView(context), Runnable {
 	
 	fun performReload() = playerBehaviour.reload()
 	
-	fun resume() {
+	@DelicateCoroutinesApi fun resume() = GlobalScope.launch {
 		running = true
-		prevFrameTime = System.currentTimeMillis()
 		
-		gameThread = Thread(this)
-		gameThread.start()
+		prevFrameTime = System.currentTimeMillis()
+		while (running) {
+			update()
+			draw()
+		}
 	}
 	
 	fun pause() {
 		running = false
-		
-		try { gameThread.join() }
-		catch (exception: Exception) { println("Error joining thread " + exception.printStackTrace()) }
 	}
 	
-	@SuppressLint("ClickableViewAccessibility")
-	override fun onTouchEvent(event: MotionEvent?): Boolean {
+	@SuppressLint("ClickableViewAccessibility") override fun onTouchEvent(event: MotionEvent?): Boolean {
 		event?.run {
 			val screenPoint = Vector2(event.x, event.y) - worldPosition
 			
